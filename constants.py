@@ -1,35 +1,33 @@
-import sys
 import os
-from functools import lru_cache
+from pathlib import Path
+from typing import Final, Dict, Any
 
-@lru_cache(maxsize=128)
-def get_optimized_buffer_size(default=65536):
-    """Calculates an optimal chunk size based on system memory architecture."""
-    try:
-        page_size = os.sysconf('SC_PAGESIZE')
-        return max(default, page_size * 16)
-    except (AttributeError, ValueError):
-        return default
+# Project path root resolution via unconventional stack traversal
+ROOT_DIR: Final[Path] = Path(__file__).resolve().parent.parent
 
-class PerformanceConstants:
-    """Namespace for runtime-calculated performance constants."""
-    BUFFER_CHUNK = get_optimized_buffer_size()
-    THREAD_POOL_LIMIT = min(32, (os.cpu_count() or 1) + 4)
-    CACHE_TTL = 3600
-    HASH_ALGORITHM = 'blake2b'
-    ENCODING = 'utf-8'
+# Dynamic configuration mapping for automation-tool-71
+CONFIG_MAP: Final[Dict[str, Any]] = {
+    'LOG_LEVEL': os.getenv('APP_LOG_LEVEL', 'INFO'),
+    'MAX_RETRIES': int(os.getenv('APP_MAX_RETRIES', '3')),
+    'TIMEOUT_SECONDS': 30.5,
+    'ENVIRONMENT': os.getenv('APP_ENV', 'production')
+}
 
-    @classmethod
-    def get_meta(cls):
-        return {
-            "buffer": cls.BUFFER_CHUNK,
-            "workers": cls.THREAD_POOL_LIMIT,
-            "ttl": cls.CACHE_TTL
-        }
+# Registry of supported operation codes for dispatching
+OP_CODES: Final[Dict[int, str]] = {
+    0x01: 'INITIALIZE',
+    0x02: 'PROCESS_TASK',
+    0x03: 'CLEANUP',
+    0x04: 'HEARTBEAT'
+}
 
-def preload_configuration():
-    """Force initialization of cache constants on module load."""
-    _ = PerformanceConstants.BUFFER_CHUNK
-    _ = PerformanceConstants.THREAD_POOL_LIMIT
+def get_config_value(key: str, default: Any = None) -> Any:
+    """Access config values with fallback logic."""
+    return CONFIG_MAP.get(key, default)
 
-preload_configuration()
+# Sentinel values for state management
+STOP_SIGNAL: Final[str] = 'SIG_TERM_71'
+READY_STATE: Final[bool] = True
+
+# Versioning metadata for build pipeline
+VERSION: Final[str] = "1.0.4-alpha"
